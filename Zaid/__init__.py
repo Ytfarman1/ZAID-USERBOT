@@ -2,7 +2,8 @@ from pyrogram import Client
 from config import API_ID, API_HASH, SUDO_USERS, OWNER_ID, BOT_TOKEN, STRING_SESSION1, STRING_SESSION2, STRING_SESSION3, STRING_SESSION4, STRING_SESSION5, STRING_SESSION6, STRING_SESSION7, STRING_SESSION8, STRING_SESSION9, STRING_SESSION10
 from datetime import datetime
 import time
-from aiohttp import ClientSession
+import aiohttp
+import asyncio
 
 StartTime = time.time()
 START_TIME = datetime.now()
@@ -12,7 +13,15 @@ clients = []
 ids = []
 
 SUDO_USERS.append(OWNER_ID)
-aiosession = ClientSession()
+
+# FIX → ❌ ClientSession() shouldn't run outside event loop
+aiosession = None
+
+async def init_aiohttp():
+    global aiosession
+    if aiosession is None:
+        aiosession = aiohttp.ClientSession()
+
 
 if API_ID:
    API_ID = API_ID
@@ -37,6 +46,10 @@ app = Client(
     plugins=dict(root="Zaid/modules/bot"),
     in_memory=True,
 )
+
+# Run aiohttp session initializer
+asyncio.get_event_loop().run_until_complete(init_aiohttp())
+
 
 if STRING_SESSION1:
    print("Client1: Found.. Starting..📳")
