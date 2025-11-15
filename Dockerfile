@@ -1,9 +1,16 @@
-FROM python:3.10-slim-bullseye
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install git curl python3-pip ffmpeg -y
+FROM python:3.9.7-slim-buster
+
+# FIX FOR pycairo / meson / pkg-config
+RUN apt-get update && apt-get install -y \
+    git curl python3-pip ffmpeg \
+    pkg-config libcairo2-dev libjpeg-dev zlib1g-dev libfreetype6-dev \
+    cmake build-essential
+
 RUN pip3 install -U pip
-RUN python3 -m pip install --upgrade pip
+
 COPY . /app/
 WORKDIR /app/
+
 RUN pip3 install -U -r requirements.txt
-CMD ["bash","start.sh"]
+
+CMD ["bash", "start.sh"]
