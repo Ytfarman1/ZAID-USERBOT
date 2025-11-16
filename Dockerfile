@@ -1,20 +1,18 @@
-FROM python:3.10-slim
+FROM python:3.10-slim-bullseye
 
-# System dependencies
+# avoid interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y \
-    git curl ffmpeg \
+    git curl python3-pip ffmpeg \
     pkg-config libcairo2-dev libjpeg-dev zlib1g-dev libfreetype6-dev \
-    cmake build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    cmake build-essential build-essential libpangocairo-1.0-0 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN pip3 install -U pip
+WORKDIR /app
+COPY . /app
 
-# Copy project
-COPY . /app/
-WORKDIR /app/
-
-# Install Python libs
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --upgrade pip
+RUN pip3 install -r requirements.txt
 
 CMD ["bash", "start.sh"]
