@@ -1,43 +1,40 @@
-from Zaid import app, API_ID, API_HASH
-from config import OWNER_ID, ALIVE_PIC
-from pyrogram import filters
-import os
-import re
-import asyncio
-import time
-from pyrogram import *
-from pyrogram.types import * 
+# BADMUSIC/plugins/bot/start.py  (only the reply_photo parts adjusted)
+import pyrogram
+from pyrogram.errors import BadRequest
 
-PHONE_NUMBER_TEXT = (
-    "✘ Heya My Master👋!\n\n✘ I'm Your Assistant?\n\n‣ I can help you to host Your Left Clients.\n\n‣ Repo: github.com/Itz-Zaid/Zaid-Userbot \n\n‣ This specially for Buzzy People's(lazy)\n\n‣ Now /clone {send your PyroGram String Session}"
-)
-
-@app.on_message(filters.user(OWNER_ID) & filters.command("start"))
-async def hello(client: app, message):
-    buttons = [
-           [
-                InlineKeyboardButton("✘ ᴜᴘᴅᴀᴛᴇꜱ ᴄʜᴀɴɴᴇʟ", url="t.me/TheUpdatesChannel"),
-            ],
-            [
-                InlineKeyboardButton("✘ ꜱᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ", url="t.me/TheSupportChat"),
-            ],
-            ]
-    reply_markup = InlineKeyboardMarkup(buttons)
-    await client.send_photo(message.chat.id, ALIVE_PIC, caption=PHONE_NUMBER_TEXT, reply_markup=reply_markup)
-
-# © By Itz-Zaid Your motherfucker if uh Don't gives credits.
-@app.on_message(filters.user(OWNER_ID) & filters.command("clone"))
-async def clone(bot: app, msg: Message):
-    chat = msg.chat
-    text = await msg.reply("Usage:\n\n /clone session")
-    cmd = msg.command
-    phone = msg.command[1]
+# helper to remove user-mention URLs from InlineKeyboardMarkup
+def sanitize_markup(markup):
+    if not markup:
+        return None
     try:
-        await text.edit("Booting Your Client")
-                   # change this Directry according to ur repo
-        client = Client(name="Melody", api_id=API_ID, api_hash=API_HASH, session_string=phone, plugins=dict(root="Zaid/modules"))
-        await client.start()
-        user = await client.get_me()
-        await msg.reply(f"Your Client Has Been Successfully As {user.first_name} ✅.")
-    except Exception as e:
-        await msg.reply(f"**ERROR:** `{str(e)}`\nPress /start to Start again.")
+        rows = []
+        for row in markup.inline_keyboard:
+            new_row = []
+            for btn in row:
+                # remove buttons that are tg://user?id=... or contain 'start=user' patterns
+                if btn.url and ("tg://user?id=" in btn.url or "start=" in (btn.url or "")) and btn.url.startswith("tg"):
+                    continue
+                new_row.append(btn)
+            if new_row:
+                rows.append(new_row)
+        if not rows:
+            return None
+        return pyrogram.types.InlineKeyboardMarkup(rows)
+    except Exception:
+        return None
+
+# usage example where you reply_photo
+try:
+    markup = InlineKeyboardMarkup(out)
+    safe_markup = sanitize_markup(markup) or None
+    await message.reply_photo(
+        random.choice(IMAGE),
+        caption=_["start_2"].format(message.from_user.mention, app.mention),
+        reply_markup=safe_markup,
+    )
+except pyrogram.errors.exceptions.bad_request_400.ButtonUserPrivacyRestricted:
+    # send without potentially restricted buttons
+    await message.reply_photo(
+        random.choice(IMAGE),
+        caption=_["start_2"].format(message.from_user.mention, app.mention),
+    )
